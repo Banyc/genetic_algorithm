@@ -6,7 +6,6 @@ use strict_num::NormalizedF64;
 pub struct Population<A, D> {
     individuals: Vec<A>,
     generations: usize,
-    scores: Vec<f64>,
     probabilities: Vec<NormalizedF64>,
     dna: Vec<D>,
 }
@@ -15,7 +14,6 @@ impl<A, D> Population<A, D> {
         Self {
             individuals,
             generations: 0,
-            scores: vec![],
             probabilities: vec![],
             dna: vec![],
         }
@@ -36,12 +34,10 @@ where
     A: Agent<Dna = D>,
     D: Dna,
 {
-    pub fn reproduce(&mut self, rate: NormalizedF64) {
-        self.scores.clear();
-        self.scores
-            .extend(self.individuals.iter().map(|x| x.score()));
+    pub fn reproduce(&mut self, scores: &[f64], rate: NormalizedF64) {
+        assert_eq!(scores.len(), self.individuals.len());
         self.probabilities.clear();
-        self.probabilities.extend(probabilities(&self.scores));
+        self.probabilities.extend(probabilities(scores));
         let mut rng = rand::thread_rng();
         self.dna.clear();
         for _ in 0..self.individuals.len() {
@@ -85,7 +81,6 @@ pub fn select_parent(probabilities: &[NormalizedF64], rng: &mut impl Rng) -> usi
 pub trait Agent {
     type Dna: Dna;
     fn crossover(&self, other: &Self) -> Self::Dna;
-    fn score(&self) -> f64;
     fn override_dna(&mut self, dna: Self::Dna);
 }
 
