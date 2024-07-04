@@ -1,6 +1,6 @@
 use rand::Rng;
 use rand_distr::Distribution;
-use strict_num::NormalizedF64;
+use strict_num::{NormalizedF64, PositiveF64};
 
 #[derive(Debug, Clone)]
 pub struct Population<A, D> {
@@ -34,7 +34,7 @@ where
     A: Agent<Dna = D>,
     D: Dna,
 {
-    pub fn reproduce(&mut self, scores: &[f64], rate: NormalizedF64) {
+    pub fn reproduce(&mut self, scores: &[PositiveF64], rate: NormalizedF64) {
         assert_eq!(scores.len(), self.individuals.len());
         self.probabilities.clear();
         self.probabilities.extend(probabilities(scores));
@@ -58,11 +58,11 @@ where
     }
 }
 
-pub fn probabilities(scores: &[f64]) -> impl Iterator<Item = NormalizedF64> + Clone + '_ {
-    let sum = scores.iter().sum::<f64>();
+pub fn probabilities(scores: &[PositiveF64]) -> impl Iterator<Item = NormalizedF64> + Clone + '_ {
+    let sum = scores.iter().map(|x| x.get()).sum::<f64>();
     scores
         .iter()
-        .map(move |&score| score / sum)
+        .map(move |&score| score.get() / sum)
         .map(|x| NormalizedF64::new(x).unwrap())
 }
 
